@@ -6,3 +6,8 @@ release-desktop/
 *.tsbuildinfo
 verification-*.png
 src/server/*.js
+
+# Temp files
+cloudflared-*.log
+tunnel-*.txt
+
