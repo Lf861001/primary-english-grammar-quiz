@@ -1,4 +1,4 @@
-# 小学生英语语法测验
+﻿# 小学生英语语法测验
 
 一个面向中文使用场景的英语语法练习项目，支持 Web 使用，也支持封装成 Windows 桌面应用。
 
@@ -33,6 +33,18 @@ npm install
 ```bash
 npm run dev
 ```
+你可以选择以下任意一种方式：
+
+**方式一：双击批处理文件（推荐）**
+
+直接双击项目根目录下的 start-dev-env.bat，它会自动：
+1. 启动 
+pm run dev（新窗口）
+2. 等待开发服务器就绪
+3. 启动 Cloudflare Tunnel 并自动抓取公网 URL
+4. 在绿色大字中显示公网地址，手机 5G 也可访问
+
+**方式二：终端命令**
 
 启动后访问：
 
@@ -106,64 +118,84 @@ npm run build
 
 ## 通过 Cloudflare Tunnel 临时分享访问
 
-如果同一局域网内的其他设备无法直接访问你的本机开发环境，可以使用 Cloudflare Tunnel 生成一个临时公网链接。
+如果同一局域网内的其他设备无法直接访问你的本机开发环境，可以使用 Cloudflare Tunnel 生成一个临时公网链接。项目提供了两个批处理脚本方便使用。
 
-### 启动步骤
+### 快速启动
 
-1. 保持本地开发服务运行：
+**start-tunnel.bat**：单独启动 Tunnel（需要先手动运行 
+pm run dev）
 
-```bash
-npm run dev
-```
+**start-dev-env.bat**：一键启动，自动运行 dev server + Tunnel + 自动捕获 URL（推荐）
 
-2. 准备 `cloudflared`
+### 前提条件
 
-可以从 Cloudflare 官方发布页下载 Windows 可执行文件：
+需要先安装 cloudflared：
 
-- [cloudflared releases](https://github.com/cloudflare/cloudflared/releases)
+`powershell
+winget install Cloudflare.cloudflared
+`
 
-3. 在另一个终端中启动 Quick Tunnel：
+### 手动命令（用于参考）
 
-```bash
-cloudflared tunnel --url http://127.0.0.1:4175 --no-autoupdate
-```
+`powershell
+cloudflared tunnel --url http://localhost:4175
+`
 
-如果 Windows 终端提示 `cloudflared` 不是内部或外部命令，说明它还没有加入 `PATH`。可以用下面两种方式之一：
+如果终端提示 cloudflared 不是内部或外部命令，请使用 cloudflared 的完整路径：
 
-```powershell
-& "C:\Users\你的用户名\AppData\Local\Temp\cloudflared-portable\cloudflared.exe" tunnel --url http://127.0.0.1:4175 --no-autoupdate
-```
-
-或者先给当前 PowerShell 会话临时追加 `PATH`：
-
-```powershell
-$env:PATH += ";C:\Users\你的用户名\AppData\Local\Temp\cloudflared-portable"
-cloudflared tunnel --url http://127.0.0.1:4175 --no-autoupdate
-```
-
-如果本机还没有安装 `cloudflared`，可以先执行：
-
-```powershell
-winget install --id Cloudflare.cloudflared
-```
-
-4. 终端会输出一个 `https://*.trycloudflare.com` 链接，把这个链接发给其他用户即可访问当前本地页面。
-
-5. 关闭开发服务器或结束临时外链时，在对应终端中按：
-
-```powershell
-Ctrl+C
-```
-
-如果开发服务器和 `cloudflared` 分别运行在两个终端窗口里，需要在两个窗口里各按一次 `Ctrl+C`。重新执行 `npm run dev` 和上面的 tunnel 命令后，会生成一个新的临时外链。
+`powershell
+& "C:\Users\NuoHe\AppData\Local\Microsoft\WinGet\Packages\Cloudflare.cloudflared_Microsoft.Winget.Source_8wekyb3d8bbwe\cloudflared.exe" tunnel --url http://localhost:4175
+`
 
 ### 常见问题
 
-- 如果页面提示 `host is not allowed`，请确认 `vite.config.ts` 中已经允许 `*.trycloudflare.com`。
-- 关闭本地 `npm run dev` 或关闭 `cloudflared` 后，临时外链会失效。
-- `Quick Tunnel` 适合演示或测试，不适合长期生产使用。
-- 如果需要固定域名或长期外链，请改用 Cloudflare Named Tunnel 或正式部署。
+如果 Tunnel 连接不稳定（国内网络到 Cloudflare 边缘节点可能受限），可以尝试：
 
+- 关闭 VPN 后重试
+- 多次运行直到连接成功（监控脚本内置了 60 秒等待和自动重试提示）
+- 使用 
+grok 作为替代：
+px ngrok http 4175
+
+### 工作原理
+
+start-dev-env.bat 的详细流程：
+
+1. 启动 
+pm run dev（新窗口）
+2. 轮询检测 port 4175 是否就绪
+3. 调用 scripts/monitor-tunnel.ps1
+4. 脚本启动 cloudflared 并写日志
+5. 监控日志直到出现 https://*.trycloudflare.com URL
+6. 继续等待 "Registered tunnel connection" 确认连接稳定
+7. 绿色大字显示公网 URL
+
+每个 Quick Tunnel URL 都是临时且唯一的，关闭后重新运行会生成新的 URL。如需固定域名请改用 Cloudflare Named Tunnel + 自有域名。
+
+### 连接注意
+
+- 如果页面提示 host is not allowed，请确认 ite.config.ts 中已允许 *.trycloudflare.com
+- 关闭 
+pm run dev 或 cloudflared 后，临时外链会失效
+- Quick Tunnel 适合演示或测试，不适合长期生产使用
+- 如需固定域名，请改用 Cloudflare Named Tunnel 或正式部署
+## Dev Environment Launcher（开发环境启动器）
+
+项目根目录提供了两个批处理脚本，双击即可使用：
+
+| 脚本 | 功能 |
+| --- | --- |
+| start-dev-env.bat | **一键启动**：自动运行 
+pm run dev + Cloudflare Tunnel，自动捕获并显示公网 URL |
+| start-tunnel.bat | **单独启动 Tunnel**：当 dev server 已运行时，单独开启 Cloudflare Tunnel |
+
+配套脚本：
+
+| 脚本 | 功能 |
+| --- | --- |
+| scripts/monitor-tunnel.ps1 | 核心监控脚本：启动 Tunnel、监控日志、等待连接稳定、显示 URL |
+
+---
 ## 桌面版支持
 
 如果你想把它作为本地应用来使用，可以直接运行桌面开发模式：
@@ -313,6 +345,8 @@ npm test
 | `npm run start` | 启动生产后端 |
 | `npm run start:desktop` | 启动本地桌面应用 |
 | `npm test` | 运行测试 |
+| start-dev-env.bat | **(双击)** 一键启动开发环境 + Tunnel 公网分享 |
+| start-tunnel.bat | **(双击)** 单独启动 Cloudflare Tunnel |
 
 ## 项目结构
 
