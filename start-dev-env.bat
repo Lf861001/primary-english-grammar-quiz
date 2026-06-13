@@ -5,6 +5,7 @@ title Primary English Grammar Quiz - Dev Environment
 set "PROJECT_DIR=%~dp0"
 set "CLOUDFLARED_PATH=C:\Users\NuoHe\AppData\Local\Microsoft\WinGet\Packages\Cloudflare.cloudflared_Microsoft.Winget.Source_8wekyb3d8bbwe\cloudflared.exe"
 set "MONITOR_SCRIPT=%PROJECT_DIR%scripts\monitor-tunnel.ps1"
+set "PROMPT_SCRIPT=%PROJECT_DIR%scripts\prompt-api-key.ps1"
 
 cd /d "%PROJECT_DIR%"
 
@@ -32,6 +33,13 @@ echo ====================================================================
 echo    Primary English Grammar Quiz - Dev Environment
 echo ====================================================================
 echo.
+
+:: Optional API key prompt
+if exist "%PROMPT_SCRIPT%" (
+    echo  [0/3] Optional AI API Key setup...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%PROMPT_SCRIPT%" -ProjectDir "%PROJECT_DIR%"
+    echo.
+)
 
 :: Step 1: Start npm run dev
 echo  [1/3] Starting npm run dev...

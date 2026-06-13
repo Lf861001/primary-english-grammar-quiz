@@ -38,6 +38,7 @@ npm run dev
 **方式一：双击批处理文件（推荐）**
 
 直接双击项目根目录下的 start-dev-env.bat，它会自动：
+0. 弹出一个 API Key 输入框，可输入 `OpenAI API Key` 或直接跳过
 1. 启动 
 pm run dev（新窗口）
 2. 等待开发服务器就绪
